@@ -240,13 +240,9 @@ def facereg():
 @app.route("/facesetup", methods=["GET", "POST"])
 def facesetup():
     if request.method == "POST":
-
-
         encoded_image = (request.form.get("pic")+"==").encode('utf-8')
 
-
         id_=db.execute("SELECT id FROM users WHERE id = :user_id", user_id=session["user_id"])[0]["id"]
-        # id_ = db.execute("SELECT id FROM users WHERE id = :user_id", user_id=session["user_id"])[0]["id"]    
         compressed_data = zlib.compress(encoded_image, 9) 
         
         uncompressed_data = zlib.decompress(compressed_data)
