@@ -5,20 +5,12 @@
 {% endblock %}
 
 {% block main %}
+
 {%if message == 1%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 40%; top:0%;" class="alert-danger">NO such user<br></H3>
-{%endif%}
-{%if message == 2%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Not clear<br></H3>
+<H3 style="align-content: center;font-family: 'Ubuntu', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Not clear<br></H3>
 {%endif%}
 
-{%if message == 3%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Incorret face<br></H3>
-{%endif%}
 
-{%if message == 5%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Not set face recogonition yet<br></H3>
-{%endif%}
 
 
 <div style="padding: 0px;margin: 0px;width:220;height:240;">
@@ -48,16 +40,8 @@ autoplay>
  Capture
 </button>
 
-<form action="/facereg" method="post"  enctype="multipart/form-data" >
-<input 
-type="text" 
-required="true" 
-placeholder ="Username"
-class="form-control"
-id="name"
-name="name"
-style="align-content: center;position: absolute;width:20%;border-radius: 100px; left: 35%; top:50%;display: none;">
-<br>
+<form action="/facesetup" method="post"  enctype="multipart/form-data" >
+
 
 <input 
 type="text" 
@@ -84,7 +68,7 @@ style="display:none">
   const captureButton = document.getElementById('capture');
   const scan = document.getElementById('scan');
   const img = document.getElementById('pic');
-  const name = document.getElementById('name');
+
 
   const vgaconstraints = {
   video: {width: {exact: 720}, height: {exact: 480}},
@@ -103,7 +87,6 @@ style="display:none">
     player.style.display="none";
     captureButton.style.display="none";
     scan.style.display="block";
-    name.style.display="block";
 
     cap = canvas.toDataURL('image/png').split(",")[1];
     img.value=cap;
