@@ -34,7 +34,7 @@ if [ ! -e "databases/sqlite.db" ] && [ -e "databases/sqlite-backup.db" ]; then
     echo "No sqlite.db found, using sqlite-backup.db to generate the file."
     
     # Copy backup file to primary (sqlite.db)
-    cp "instance/volumes/sqlite-backup.db" "databases/sqlite.db"
+    cp "databases/sqlite-backup.db" "databases/sqlite.db"
 
     # Extract the new Alembic version from the backup database
     backup_version=$(sqlite3 databases/sqlite.db "SELECT version_num FROM alembic_version;")
@@ -44,14 +44,14 @@ if [ ! -e "databases/sqlite.db" ] && [ -e "databases/sqlite-backup.db" ]; then
 
 # Check if sqlite.db exists
 # . backup before migration
-elif [ -e "instance/volumes/sqlite.db" ]; then
+elif [ -e "databases/sqlite.db" ]; then
     # Create a timestamp for the backup file
     timestamp=$(date "+%Y%m%d%H%M%S")
-    backup_file="instance/volumes/sqlite-backup-${timestamp}.db"
+    backup_file="databases/sqlite-backup-${timestamp}.db"
 
     # Backup SQLite database
-    sqlite3 instance/volumes/sqlite.db ".backup instance/volumes/sqlite-backup.db"
-    sqlite3 instance/volumes/sqlite.db ".backup ${backup_file}"
+    sqlite3 databases/sqlite.db ".backup instance/volumes/sqlite-backup.db"
+    sqlite3 databases/sqlite.db ".backup ${backup_file}"
 fi
 
 
