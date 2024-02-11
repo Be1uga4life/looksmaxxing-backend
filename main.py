@@ -15,16 +15,18 @@ import face_recognition
 from PIL import Image
 from base64 import b64encode, b64decode
 import re
+from flask import Flask, request, jsonify, redirect, session, render_template
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from flask import Blueprint, request, jsonify, current_app, Response
 
-from helpers import apology, login_required
-# Configure application
+import functools
+from functools import wraps
+
+
 app = Flask(__name__)
-#configure flask-socketio
-
-# Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-# Ensure responses aren't cached
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -32,25 +34,38 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-
-# Custom filter
-
-
-# Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///data.db")
+
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if "token" not in session:
+            return redirect("/login")
+        token = session["token"]
+        try:
+            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+            user_id = data["user_id"]
+            user = db.execute("SELECT * FROM users WHERE id = :user_id", user_id=user_id).fetchone()
+
+            if not user:
+                return "User Not Found"
+
+            return view(user, **kwargs)
+        except jwt.ExpiredSignatureError:
+            return render_template("login.html", message="Expired token")
+        except jwt.InvalidTokenError:
+            return render_template("login.html", message="Invalid token")
+    return wrapped_view
 
 
 @app.route("/")
 @login_required
 def home():
-
-
     return redirect("/home")
 
 @app.route("/home")
@@ -59,61 +74,39 @@ def index():
     return render_template("index.html")
 
 
-
-
-
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
-    """Log user in"""
 
-    # Forget any user_id
-    session.clear()
+    app.config["SECRET_KEY"] = "password"
 
-    # User reached route via POST (as by submitting a form via POST)
-    if request.method == "POST":
+    data = request.get_json()
 
-        # Assign inputs to variables
-        input_username = request.form.get("username")
-        input_password = request.form.get("password")
+    input_username = data.get("username")
+    input_password = data.get("password")
 
-        # Ensure username was submitted
-        if not input_username:
-            return render_template("login.html",messager = 1)
+    # Query database for username
+    users = db.execute("SELECT * FROM users WHERE username = :username", username=input_username)
 
+    # Check if there are any users with the provided username
+    if not users:
+        return "User Not Found!"
 
+    # Check each user's password
+    for user in users:
+        if check_password_hash(user["hash"], input_password):
+            token = jwt.encode({"user_id": str(user["id"])}, current_app.config["SECRET_KEY"], algorithm="HS256")
+            session["token"] = token 
+            return "Login Succesful!"
 
-        # Ensure password was submitted
-        elif not input_password:
-             return render_template("login.html",messager = 2)
+    return "Invalid Username or Password"
 
-        # Query database for username
-        username = db.execute("SELECT * FROM users WHERE username = :username",
-                              username=input_username)
-
-        # Ensure username exists and password is correct
-        if len(username) != 1 or not check_password_hash(username[0]["hash"], input_password):
-            return render_template("login.html",messager = 3)
-
-        # Remember which user has logged in
-        session["user_id"] = username[0]["id"]
-
-
-
-        # Redirect user to home page
-        return redirect("/")
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    else:
-        return render_template("login.html")
 
 
 @app.route("/logout")
 def logout():
     """Log user out"""
 
-    # Forget any user_id
-    session.clear()
+    session.pop("token", None)
 
     # Redirect user to login form
     return redirect("/")
@@ -124,28 +117,28 @@ def logout():
 def register():
     """Register user"""
 
-    # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # Assign inputs to variables
-        input_username = request.form.get("username")
-        input_password = request.form.get("password")
-        input_confirmation = request.form.get("confirmation")
+        data = request.get_json()
+
+        input_username = data.get("username")
+        input_password = data.get("password")
+        input_confirmation = data.get("confirmation")
 
         # Ensure username was submitted
         if not input_username:
-            return render_template("register.html",messager = 1)
+            return "Please input Username!"
 
         # Ensure password was submitted
         elif not input_password:
-            return render_template("register.html",messager = 2)
+            return "Please input Password!"
 
         # Ensure passwsord confirmation was submitted
         elif not input_confirmation:
-            return render_template("register.html",messager = 4)
+            return "Please submit password confirmation!"
 
         elif not input_password == input_confirmation:
-            return render_template("register.html",messager = 3)
+            return "Passwords aren't matching!"
 
         # Query database for username
         username = db.execute("SELECT username FROM users WHERE username = :username",
@@ -153,7 +146,7 @@ def register():
 
         # Ensure username is not already taken
         if len(username) == 1:
-            return render_template("register.html",messager = 5)
+            return "Username is already taken"
 
         # Query database to insert new user
         else:
@@ -169,7 +162,7 @@ def register():
             flash(f"Registered as {input_username}")
 
             # Redirect user to homepage
-            return redirect("/")
+            return "Signup Successful!"
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -178,62 +171,51 @@ def register():
 
 
 
-@app.route("/facereg", methods=["GET", "POST"])
+@app.route("/facereg", methods=["POST"])
 def facereg():
     session.clear()
-    if request.method == "POST":
+    encoded_image = (request.form.get("pic")+"==").encode('utf-8')
+    username = request.form.get("name")
+    name = db.execute("SELECT * FROM users WHERE username = :username",
+                    username=username)
+            
+    if len(name) != 1:
+        return render_template("camera.html",message = 1)
 
-
-        encoded_image = (request.form.get("pic")+"==").encode('utf-8')
-        username = request.form.get("name")
-        name = db.execute("SELECT * FROM users WHERE username = :username",
-                        username=username)
-              
-        if len(name) != 1:
-            return render_template("camera.html",message = 1)
-
-        id_ = name[0]['id']    
-        compressed_data = zlib.compress(encoded_image, 9) 
-        
-        uncompressed_data = zlib.decompress(compressed_data)
-        
-        decoded_data = b64decode(uncompressed_data)
-        
-        new_image_handle = open('./static/face/'+str(id_)+'.jpg', 'wb')
-        
-        new_image_handle.write(decoded_data)
-        new_image_handle.close()
-        try:
-            image_of_bill = face_recognition.load_image_file(
-            './static/face/'+str(id_)+'.jpg')
-        except:
-            return render_template("camera.html",message = 5)
-
-        bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
-
-        unknown_image = face_recognition.load_image_file(
+    id_ = name[0]['id']    
+    compressed_data = zlib.compress(encoded_image, 9) 
+    
+    uncompressed_data = zlib.decompress(compressed_data)
+    
+    decoded_data = b64decode(uncompressed_data)
+    
+    new_image_handle = open('./static/face/'+str(id_)+'.jpg', 'wb')
+    
+    new_image_handle.write(decoded_data)
+    new_image_handle.close()
+    try:
+        image_of_bill = face_recognition.load_image_file(
         './static/face/'+str(id_)+'.jpg')
-        try:
-            unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
-        except:
-            return render_template("camera.html",message = 2)
+    except:
+        return render_template("camera.html",message = 5)
 
+    bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
 
-#  o    mpare faces
-        results = face_recognition.compare_faces(
-        [bill_face_encoding], unknown_face_encoding)
+    unknown_image = face_recognition.load_image_file(
+    './static/face/'+str(id_)+'.jpg')
+    try:
+        unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
+    except:
+        return render_template("camera.html",message = 2)
 
-        if results[0]:
-            username = db.execute("SELECT * FROM users WHERE username = :username",
-                              username="swa")
-            session["user_id"] = username[0]["id"]
-            return redirect("/")
-        else:
-            return render_template("camera.html",message=3)
+    results = face_recognition.compare_faces(
+    [bill_face_encoding], unknown_face_encoding)
 
-
+    if results[0]:
+        return "Authentication successful"
     else:
-        return render_template("camera.html")
+        return "Authentication failed"
+
 
 
 
