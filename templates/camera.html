@@ -4,6 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera</title>
+    <style>
+        body {
+            background-color: #1e1e1e; /* Dark background color */
+            color: #ffffff; /* Light text color */
+            font-family: Arial, sans-serif; /* Specify font family */
+            display: flex;
+            justify-content: center; /* Center the content horizontally */
+            align-items: center; /* Center the content vertically */
+            height: 100vh; /* Full viewport height */
+            margin: 0; /* Remove default margin */
+        }
+
+        form {
+            text-align: center; /* Center form elements */
+            padding: 20px; /* Add padding */
+            background-color: #2c2c2c; /* Dark background color for form */
+            border-radius: 10px; /* Add border radius */
+        }
+
+        input[type="text"],
+        input[type="hidden"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #3a3a3a; /* Darker input background color */
+            color: #ffffff; /* Light text color */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Add border radius */
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue button color */
+            color: #ffffff; /* Light text color */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Add border radius */
+            cursor: pointer; /* Change cursor on hover */
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker blue color on hover */
+        }
+
+        video {
+            display: block; /* Make the video element a block-level element */
+            margin: auto; /* Center the video horizontally */
+        }
+    </style>
 </head>
 <body>
     <form id="imageForm" enctype="multipart/form-data">
@@ -77,3 +125,4 @@
 
 </script>
 </body>
+</html>
