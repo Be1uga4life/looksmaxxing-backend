@@ -178,23 +178,21 @@ def register():
 @app.route("/facereg", methods=["POST"])
 def facereg():
     
-    encoded_image = (request.form.get("image")+"==").encode('utf-8')
+    encoded_image = request.form.get("image")
 
-    username = request.form.get("name")
+    username = request.form.get("username")
     name = db.execute("SELECT * FROM users WHERE username = :username",
                     username=username)
     
-    print("This is the name: ", name)
     if len(name) != 1:
-        return "Name not provided"
+        return jsonify("Name not provided or user doesn't exist")
 
     id_ = name[0]['id'] 
+    
+    encoded_image = encoded_image.split(',')
+    encoded_image = encoded_image[1].strip()
 
-    compressed_data = zlib.compress(encoded_image, 9) 
-    
-    uncompressed_data = zlib.decompress(compressed_data)
-    
-    decoded_data = b64decode(uncompressed_data)
+    decoded_data = b64decode(encoded_image)
     
     new_image_handle = open('./static/face/'+str(id_)+'.jpg', 'wb')
     
@@ -222,6 +220,8 @@ def facereg():
         return "Authentication successful"
     else:
         return "Authentication failed"
+
+    return "something went wrong!"
 
 
 
