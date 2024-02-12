@@ -28,8 +28,7 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-app.config["TEMPLATES_AUTO_RELOAD"] = True
-CORS(app)
+CORS(app, resources={r"/facereg": {"origins": "*"}}, allow_headers="Content-Type", methods=["POST"])
 
 @app.after_request
 def after_request(response):
@@ -264,5 +263,5 @@ def errorhandler(e):
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
-if __name__ == '__main__':
-      app.run()
+if __name__ == "__main__":
+    app.run(debug=True)

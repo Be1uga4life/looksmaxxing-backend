@@ -52,11 +52,11 @@
   // Send the image data to the backend server using fetch
   fetch(apiLink, {
     method: 'POST',
-    body: formData // Use formData as the body
+    body: formData, // Use formData as the body
+    mode: "cors"
   })
     .then(response => response.json())
     .then(data => {
-      console
       console.log(data); // Log the response from the server
     })
     .catch(error => {
