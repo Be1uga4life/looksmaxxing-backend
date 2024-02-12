@@ -202,7 +202,7 @@ def facereg():
         image_of_bill = face_recognition.load_image_file(
         './static/face/'+str(id_)+'.jpg')
     except:
-        return "No Face Recognition setup yet"
+        return jsonify("No Face Recognition setup yet")
 
     bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
 
@@ -211,17 +211,18 @@ def facereg():
     try:
         unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
     except:
-        return "Not clear face"
+        return jsonify("Not clear face")
 
     results = face_recognition.compare_faces(
     [bill_face_encoding], unknown_face_encoding)
 
     if results[0]:
-        return "Authentication successful"
+        return jsonify("Authentication successful")
     else:
-        return "Authentication failed"
+        return jsonify("Authentication failed")
 
-    return "something went wrong!"
+    return jsonify("something went wrong!")
+    
 
 
 
