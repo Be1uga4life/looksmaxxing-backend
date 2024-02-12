@@ -29,7 +29,7 @@
     video: { width: { exact: 720 }, height: { exact: 480 } },
   };
 
-  function capture(event) {
+  function capture() {
   event.preventDefault();
   // Draw the current frame of the video onto the canvas
   context.drawImage(player, 0, 0, canvas.width, canvas.height);
