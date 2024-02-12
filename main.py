@@ -23,9 +23,13 @@ from flask import Blueprint, request, jsonify, current_app, Response
 import functools
 from functools import wraps
 
+from flask import Flask
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+CORS(app)
 
 @app.after_request
 def after_request(response):
@@ -173,16 +177,19 @@ def register():
 
 @app.route("/facereg", methods=["POST"])
 def facereg():
-    session.clear()
-    encoded_image = (request.form.get("pic")+"==").encode('utf-8')
+    
+    encoded_image = (request.form.get("image")+"==").encode('utf-8')
+
     username = request.form.get("name")
     name = db.execute("SELECT * FROM users WHERE username = :username",
                     username=username)
-            
+    
+    print("This is the name: ", name)
     if len(name) != 1:
-        return render_template("camera.html",message = 1)
+        return "Name not provided"
 
-    id_ = name[0]['id']    
+    id_ = name[0]['id'] 
+
     compressed_data = zlib.compress(encoded_image, 9) 
     
     uncompressed_data = zlib.decompress(compressed_data)
@@ -197,7 +204,7 @@ def facereg():
         image_of_bill = face_recognition.load_image_file(
         './static/face/'+str(id_)+'.jpg')
     except:
-        return render_template("camera.html",message = 5)
+        return "No Face Recognition setup yet"
 
     bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
 
@@ -206,7 +213,7 @@ def facereg():
     try:
         unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
     except:
-        return render_template("camera.html",message = 2)
+        return "Not clear face"
 
     results = face_recognition.compare_faces(
     [bill_face_encoding], unknown_face_encoding)

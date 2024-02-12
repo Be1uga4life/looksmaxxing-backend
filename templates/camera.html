@@ -1,81 +1,20 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera</title>
+</head>
+<body>
+    <form id="imageForm" enctype="multipart/form-data">
+        <input type="text" id="username" name="username" placeholder="Username" required>
+        <input type="hidden" id="pic" name="pic">
+        <button onclick="capture()">Capture</button>
+        <button id="scan" class="btn btn-primary" style="display: none;">Scan</button>
+    </form>
 
-{% block title %}
-    camera
-{% endblock %}
-
-{% block main %}
-{%if message == 1%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 40%; top:0%;" class="alert-danger">NO such user<br></H3>
-{%endif%}
-{%if message == 2%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Not clear<br></H3>
-{%endif%}
-
-{%if message == 3%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Incorret face<br></H3>
-{%endif%}
-
-{%if message == 5%}
-<H3 style="align-content: center;font-family: 'Roboto', sans-serif;position: absolute;border-radius: 0; left: 43%; top:0%;" class="alert-danger">Not set face recogonition yet<br></H3>
-{%endif%}
-
-
-<div style="padding: 0px;margin: 0px;width:220;height:240;">
-
-<canvas 
-  style="position: absolute; left: 0%;z-index: -1; top:0%;height: 480px;width: 640px;"
-  id="canvas" >
-</canvas>
-
-<button
- id="stop" 
- onclick="stop()" 
- style="display:none">stop
-</button>
-
-<video id="player" style="position: sticky;height: 640;width: 480;z-index: -1;"
-autoplay>
-</video>
-
-<br>
-
-<button
- id="capture" 
- style="align-content: center;position: absolute;border-radius: 100px; left: 47%; top:50%;"
- class="btn btn-primary"
- onclick="capture()">
- Capture
-</button>
-
-<form action="/facereg" method="post"  enctype="multipart/form-data" >
-<input 
-type="text" 
-required="true" 
-placeholder ="Username"
-class="form-control"
-id="name"
-name="name"
-style="align-content: center;position: absolute;width:20%;border-radius: 100px; left: 35%; top:50%;display: none;">
-<br>
-
-<input 
-type="text" 
-id="pic" name="pic" 
-style="display:none">
-
-<button id="scan"
- style="align-content: center;position: absolute;border-radius: 100px;display: none; left: 52%; top:50%;"
- class="btn btn-primary">
-  scan
-</button>
-
-</form>
-
-</div>
-
-
-
+    <video id="player" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
   const player = document.getElementById('player');
@@ -83,46 +22,56 @@ style="display:none">
   const context = canvas.getContext('2d');
   const captureButton = document.getElementById('capture');
   const scan = document.getElementById('scan');
-  const img = document.getElementById('pic');
-  const name = document.getElementById('name');
+  const imgInput = document.getElementById('pic');
+  const nameInput = document.getElementById('username');
 
   const vgaconstraints = {
-  video: {width: {exact: 720}, height: {exact: 480}},
+    video: { width: { exact: 720 }, height: { exact: 480 } },
   };
 
-  function capture(){
-  canvas.style.position="relative";
-  canvas.style.left="0%";
-  canvas.style.top="0%";
-  canvas.style.width = "720px";
-  canvas.style.height = "480px"
-  	
-  	
+  function capture() {
+  // Draw the current frame of the video onto the canvas
+  context.drawImage(player, 0, 0, canvas.width, canvas.height);
+  // Convert the canvas content to a data URL (base64-encoded image)
+  const imageDataURL = canvas.toDataURL('image/png');
 
-    context.drawImage(player, 0, 0, canvas.width, canvas.height);
-    player.style.display="none";
-    captureButton.style.display="none";
-    scan.style.display="block";
-    name.style.display="block";
+  // Set the value of the hidden input field to the base64-encoded image data
+  imgInput.value = imageDataURL;
 
-    cap = canvas.toDataURL('image/png').split(",")[1];
-    img.value=cap;
-    
-  }
+  // Get the username from the input field
+  const username = nameInput.value;
 
-function stop(){
-  player.srcObject.getVideoTracks().forEach(track => track.stop());
+  // Create a FormData object to send the data as multipart/form-data
+  const formData = new FormData();
+  formData.append('username', username);
+  formData.append('image', imageDataURL);
+
+  // Specify the API endpoint to send the data to
+  const apiLink = "http://127.0.0.1:5000/facereg";
+
+  // Send the image data to the backend server using fetch
+  fetch(apiLink, {
+    method: 'POST',
+    body: formData // Use formData as the body
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data); // Log the response from the server
+    })
+    .catch(error => {
+      console.error('Error:', error); // Log any errors that occur
+    });
 }
 
 
+  function stop() {
+    player.srcObject.getVideoTracks().forEach(track => track.stop());
+  }
 
   navigator.mediaDevices.getUserMedia(vgaconstraints)
     .then((stream) => {
-      // Attach the video stream to the video element and autoplay.
       player.srcObject = stream;
     });
-</script>
- 
 
-</html>
-{% endblock %}
+</script>
+</body>
