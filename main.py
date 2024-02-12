@@ -28,7 +28,8 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/facereg": {"origins": "*"}}, allow_headers="Content-Type", methods=["POST"])
+CORS(app)
+
 
 @app.after_request
 def after_request(response):
@@ -176,15 +177,14 @@ def register():
 
 @app.route("/facereg", methods=["POST"])
 def facereg():
-    
     encoded_image = request.form.get("image")
-
     username = request.form.get("username")
-    name = db.execute("SELECT * FROM users WHERE username = :username",
-                    username=username)
+    name = db.execute("SELECT * FROM users WHERE username = :username", username=username)
     
     if len(name) != 1:
-        return jsonify("Name not provided or user doesn't exist")
+        response = jsonify({"message": "Either name not provided, or invalid"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     id_ = name[0]['id'] 
     
@@ -197,30 +197,39 @@ def facereg():
     
     new_image_handle.write(decoded_data)
     new_image_handle.close()
+    
     try:
-        image_of_bill = face_recognition.load_image_file(
-        './static/face/'+str(id_)+'.jpg')
+        image_of_bill = face_recognition.load_image_file('./static/face/'+str(id_)+'.jpg')
     except:
-        return jsonify("No Face Recognition setup yet")
+        response = jsonify({"message": "No Face Recognition setup yet"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
 
-    unknown_image = face_recognition.load_image_file(
-    './static/face/'+str(id_)+'.jpg')
+    unknown_image = face_recognition.load_image_file('./static/face/'+str(id_)+'.jpg')
     try:
         unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
     except:
-        return jsonify("Not clear face")
+        response = jsonify({"message": "Not clear face"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
-    results = face_recognition.compare_faces(
-    [bill_face_encoding], unknown_face_encoding)
+    results = face_recognition.compare_faces([bill_face_encoding], unknown_face_encoding)
 
     if results[0]:
-        return jsonify("Authentication successful")
+        response = jsonify({"message": "Authentication Succesful"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
     else:
-        return jsonify("Authentication failed")
+        response = jsonify({"message": "Failed Authentication"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
-    return jsonify("something went wrong!")
+    response = jsonify({"message": "Something went wrong"})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
     
 
 

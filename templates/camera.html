@@ -29,7 +29,8 @@
     video: { width: { exact: 720 }, height: { exact: 480 } },
   };
 
-  function capture() {
+  function capture(event) {
+  event.preventDefault();
   // Draw the current frame of the video onto the canvas
   context.drawImage(player, 0, 0, canvas.width, canvas.height);
   // Convert the canvas content to a data URL (base64-encoded image)
