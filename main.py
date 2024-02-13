@@ -227,7 +227,12 @@ def facereg():
     if results[0]:
         response = jsonify({"message": "Authentication Succesful"})
         response.headers.add('Access-Control-Allow-Origin', '*')
-        return response
+
+
+        expiration_time = datetime.utcnow() + timedelta(hours=1)
+        token = jwt.encode({"user_id": str(user["id"]), "exp": expiration_time}, current_app.config["SECRET_KEY"], algorithm="HS256")
+        session["token"] = token 
+        return jsonify({"message": "Login Successful!", "token": token})
     else:
         response = jsonify({"message": "Failed Authentication"})
         response.headers.add('Access-Control-Allow-Origin', '*')
