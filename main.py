@@ -184,9 +184,12 @@ def register():
 
 @app.route("/facereg", methods=["POST"])
 def facereg():
+    app.config["SECRET_KEY"] = "password"
+    
     encoded_image = request.form.get("image")
     username = request.form.get("username")
     name = db.execute("SELECT * FROM users WHERE username = :username", username=username)
+
     
     if len(name) != 1:
         response = jsonify({"message": "Either name not provided, or invalid"})
@@ -229,8 +232,11 @@ def facereg():
         response.headers.add('Access-Control-Allow-Origin', '*')
 
 
+        first_item = name[0]
+        user_id = first_item['id']
+
         expiration_time = datetime.utcnow() + timedelta(hours=1)
-        token = jwt.encode({"user_id": str(user["id"]), "exp": expiration_time}, current_app.config["SECRET_KEY"], algorithm="HS256")
+        token = jwt.encode({"user_id": str(user_id), "exp": expiration_time}, current_app.config["SECRET_KEY"], algorithm="HS256")
         session["token"] = token 
         return jsonify({"message": "Login Successful!", "token": token})
     else:
