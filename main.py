@@ -93,16 +93,17 @@ def login():
 
     # Check if there are any users with the provided username
     if not users:
-        return "User Not Found!"
+        return jsonify("User Not Found!")
 
     # Check each user's password
     for user in users:
         if check_password_hash(user["hash"], input_password):
             token = jwt.encode({"user_id": str(user["id"])}, current_app.config["SECRET_KEY"], algorithm="HS256")
             session["token"] = token 
-            return "Login Succesful!"
+            return jsonify(token)  # Include token in response
 
-    return "Invalid Username or Password"
+    return jsonify("Invalid Username or Password")
+
 
 
 

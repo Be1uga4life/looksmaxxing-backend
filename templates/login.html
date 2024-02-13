@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
     <style>
         body {
-            background-image: url('https://media.discordapp.net/attachments/1188222458382262402/1206708820865327105/638cb36d7e6542fb87e6549eb3acd0f4.png?ex=65dcfe2a&is=65ca892a&hm=f5c6695251c0475b288f4d6e66528d9307069f4cbe5faaf8daa6ed4012aeaddf&=&format=webp&quality=lossless&width=1374&height=916');
-            background-size: cover;
-            background-position: center;
+            background-color: #1e1e1e; /* Dark background color */
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -23,14 +20,16 @@
             color: #FF69B4; /* Pink */
         }
 
-        form {
-            background-color: #FFF;
-            padding: 20px;
+        .loginform {
+            background-color: #2e2e2e; /* Darker gray */
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Darker shadow */
             max-width: 300px;
             width: 100%;
+            margin-right: auto; /* Center the form to the left */
         }
+
 
         form div {
             margin-bottom: 20px;
@@ -49,6 +48,8 @@
             border: 1px solid #FF69B4; /* Pink */
             border-radius: 5px;
             outline: none;
+            background-color: #333; /* Dark input background */
+            color: #FFF; /* White text */
         }
 
         button[type="submit"] {
@@ -68,7 +69,6 @@
     </style>
 </head>
 <body>
-    <h2>Login</h2>
     <form id="loginForm">
         <div>
             <label for="username">Username:</label>
@@ -94,8 +94,9 @@
                 "password": password
             };
 
+            const apiLink = "http://127.0.0.1:5000/login";
             // Send POST request to /login endpoint
-            fetch("/login", {
+            fetch("apilink", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
