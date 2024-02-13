@@ -78,9 +78,11 @@ def index():
     return render_template("index.html")
 
 
+import jwt
+from datetime import datetime, timedelta
+
 @app.route("/login", methods=["POST"])
 def login():
-
     app.config["SECRET_KEY"] = "password"
 
     data = request.get_json()
@@ -98,11 +100,15 @@ def login():
     # Check each user's password
     for user in users:
         if check_password_hash(user["hash"], input_password):
-            token = jwt.encode({"user_id": str(user["id"])}, current_app.config["SECRET_KEY"], algorithm="HS256")
+            # Set the expiration time for the token (e.g., 1 hour from now)
+            expiration_time = datetime.utcnow() + timedelta(hours=1)
+            # Encode the token with the expiration time
+            token = jwt.encode({"user_id": str(user["id"]), "exp": expiration_time}, current_app.config["SECRET_KEY"], algorithm="HS256")
             session["token"] = token 
-            return jsonify(token)  # Include token in response
-
+            return jsonify({"message": "Login Successful!", "token": token})
+    
     return jsonify("Invalid Username or Password")
+
 
 
 
