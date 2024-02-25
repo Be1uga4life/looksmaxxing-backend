@@ -24,6 +24,7 @@ import functools
 from functools import wraps
 from flask_cors import CORS
 
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
@@ -177,9 +178,6 @@ def register():
     else:
         return render_template("register.html")
 
-
-
-
 @app.route("/facereg", methods=["POST"])
 def facereg():
     app.config["SECRET_KEY"] = "password"
@@ -246,6 +244,58 @@ def facereg():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+
+@app.route('/leaderboard', methods=['POST'])
+def leaderboard():
+    data = request.json  # Get the JSON data sent from the frontend
+    userid = data.get('userId')
+    points_to_add = data.get('points')
+
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM users WHERE id=?", (userid,))
+        row = cursor.fetchone()  # Fetch the first matching row
+
+        if row:
+            # Extract the points value from the row
+            current_points = row[3]  # Assuming points is the second column in your table
+
+            # Modify the points column by adding the provided value
+            new_points = int(current_points) + int(points_to_add)
+
+            print(new_points)
+
+            # Update the points value in the database
+            cursor.execute("UPDATE users SET points=? WHERE id=?", (new_points, userid))
+            db.commit()
+
+            print("Points updated successfully.")
+        else:
+            print("User ID not found in the database.")
+
+    except sqlite3.Error as e:
+        print("Error updating points in the database:", e)
+
+    finally:
+        # Close the database connection
+        db.close()
+        print(new_points)
+        return jsonify({'message': 'Leaderboard updated successfully'})
+
+
+@app.route('/leaderboard_data')
+def leaderboard_data():
+    # Fetch all users along with their points from the database
+    users = db.execute("SELECT username, points FROM users")
+    
+    # Convert user data to a list of dictionaries
+    leaderboard_data = [{'username': user['username'], 'points': user['points']} for user in users]
+    
+    # Return the leaderboard data as JSON
+    return jsonify(leaderboard_data)
+    
+
 if __name__ == "__main__":
     app.run(debug=True)
-
