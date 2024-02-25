@@ -22,8 +22,6 @@ from flask import Blueprint, request, jsonify, current_app, Response
 
 import functools
 from functools import wraps
-
-from flask import Flask
 from flask_cors import CORS
 
 
