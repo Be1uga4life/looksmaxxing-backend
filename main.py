@@ -199,7 +199,7 @@ def facereg():
 
     decoded_data = b64decode(encoded_image)
     
-    new_image_handle = open('./static/face/'+str(id_)+'.jpg', 'wb')
+    new_image_handle = open('./static/face/unknown/'+str(id_)+'.jpg', 'wb')
     
     new_image_handle.write(decoded_data)
     new_image_handle.close()
@@ -213,7 +213,7 @@ def facereg():
 
     bill_face_encoding = face_recognition.face_encodings(image_of_bill)[0]
 
-    unknown_image = face_recognition.load_image_file('./static/face/'+str(id_)+'.jpg')
+    unknown_image = face_recognition.load_image_file('./static/face/unknown/'+str(id_)+'.jpg')
     try:
         unknown_face_encoding = face_recognition.face_encodings(unknown_image)[0]
     except:
